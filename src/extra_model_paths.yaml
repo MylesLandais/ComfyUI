@@ -12,6 +12,8 @@ runpod_worker_comfy:
   vae: models/vae/
   unet: models/unet/
   Qwen3-TTS: models/Qwen3-TTS/
+  llm: models/llm/
+  insightface: models/insightface/
 
 # Network Volume support - RunPod mounts network volumes at /workspace
 runpod_network_volume:

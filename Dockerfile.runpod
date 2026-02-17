@@ -96,5 +96,8 @@ RUN comfy-node-install https://github.com/DarioFT/ComfyUI-Qwen3-TTS
 # Install llama-cpp-python with CUDA support for GGUF model inference
 RUN CMAKE_ARGS="-DGGML_CUDA=on" uv pip install llama-cpp-python
 
+# QwenVL node for vision-language model inference
+RUN comfy-node-install https://github.com/1038lab/ComfyUI-QwenVL
+
 # Qwen-TTS dependencies
 RUN uv pip install librosa accelerate

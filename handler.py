@@ -661,6 +661,7 @@ def handler(job):
     prompt_id = None
     output_images = []
     output_audio = []
+    output_text = []
     errors = []
 
     try:
@@ -946,8 +947,18 @@ def handler(job):
                         error_msg = f"Failed to fetch audio data for {filename} from /view endpoint."
                         errors.append(error_msg)
 
+            # Extract text outputs (e.g. from PreviewAny, ShowText nodes)
+            if "text" in node_output:
+                for text_item in node_output["text"]:
+                    if isinstance(text_item, str):
+                        output_text.append({"node_id": node_id, "text": text_item})
+                        print(f"worker-comfyui - Node {node_id} produced text output ({len(text_item)} chars)")
+                    elif isinstance(text_item, dict) and "text" in text_item:
+                        output_text.append({"node_id": node_id, "text": text_item["text"]})
+                        print(f"worker-comfyui - Node {node_id} produced text output ({len(text_item['text'])} chars)")
+
             # Check for other output types
-            other_keys = [k for k in node_output.keys() if k not in ["images", "audio"]]
+            other_keys = [k for k in node_output.keys() if k not in ["images", "audio", "text"]]
             if other_keys:
                 warn_msg = (
                     f"Node {node_id} produced unhandled output keys: {other_keys}."
@@ -982,27 +993,30 @@ def handler(job):
 
     if output_images:
         final_result["images"] = output_images
-    
+
     if output_audio:
         final_result["audio"] = output_audio
+
+    if output_text:
+        final_result["text"] = output_text
 
     if errors:
         final_result["errors"] = errors
         print(f"worker-comfyui - Job completed with errors/warnings: {errors}")
 
-    if not output_images and not output_audio and errors:
+    if not output_images and not output_audio and not output_text and errors:
         print(f"worker-comfyui - Job failed with no output files.")
         return {
             "error": "Job processing failed",
             "details": errors,
         }
-    elif not output_images and not output_audio and not errors:
+    elif not output_images and not output_audio and not output_text and not errors:
         print(
             f"worker-comfyui - Job completed successfully, but the workflow produced no images or audio."
         )
         final_result["status"] = "success_no_output"
 
-    print(f"worker-comfyui - Job completed. Returning {len(output_images)} image(s) and {len(output_audio)} audio file(s).")
+    print(f"worker-comfyui - Job completed. Returning {len(output_images)} image(s), {len(output_audio)} audio file(s), {len(output_text)} text output(s).")
     return final_result
 
 
