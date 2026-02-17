@@ -81,23 +81,26 @@ COPY --from=downloader /comfyui/models /comfyui/models
 RUN pip install opentelemetry-distro && pip install opentelemetry-exporter-otlp
 
 RUN opentelemetry-bootstrap --action=install
-RUN comfy-node-install https://github.com/city96/ComfyUI-GGUF
-RUN comfy-node-install https://github.com/rgthree/rgthree-comfy
-RUN comfy-node-install https://github.com/ClownsharkBatwing/RES4LYF
-RUN comfy-node-install https://github.com/giriss/comfy-image-saver
 
-# Install nodes with Git LFS skip to avoid baking multi-GB models into image
-RUN comfy-node-install https://github.com/Enemyx-net/VibeVoice-ComfyUI && \
-    GIT_LFS_SKIP_SMUDGE=1 comfy-node-install https://github.com/snicolast/ComfyUI-IndexTTS2
-RUN comfy-node-install https://github.com/ru4ls/ComfyUI_Nano_Banana
-RUN comfy-node-install https://github.com/1038lab/ComfyUI-JoyCaption
-RUN comfy-node-install https://github.com/DarioFT/ComfyUI-Qwen3-TTS
+# Install custom nodes in batches to reduce registry fetches and layer count.
+# Each comfy-node-install call triggers a full ComfyRegistry fetch (~100s),
+# so batching saves significant build time.
+RUN comfy-node-install \
+    https://github.com/city96/ComfyUI-GGUF \
+    https://github.com/rgthree/rgthree-comfy \
+    https://github.com/ClownsharkBatwing/RES4LYF \
+    https://github.com/giriss/comfy-image-saver \
+    https://github.com/Enemyx-net/VibeVoice-ComfyUI \
+    https://github.com/ru4ls/ComfyUI_Nano_Banana \
+    https://github.com/1038lab/ComfyUI-JoyCaption \
+    https://github.com/DarioFT/ComfyUI-Qwen3-TTS \
+    https://github.com/1038lab/ComfyUI-QwenVL
 
-# Install llama-cpp-python with CUDA support for GGUF model inference
+# IndexTTS2 needs LFS skip to avoid baking multi-GB models into image
+RUN GIT_LFS_SKIP_SMUDGE=1 comfy-node-install https://github.com/snicolast/ComfyUI-IndexTTS2
+
+# llama-cpp-python with CUDA support for GGUF model inference
 RUN CMAKE_ARGS="-DGGML_CUDA=on" uv pip install llama-cpp-python
 
-# QwenVL node for vision-language model inference
-RUN comfy-node-install https://github.com/1038lab/ComfyUI-QwenVL
-
-# Qwen-TTS dependencies
+# Additional pip deps for TTS/VLM nodes
 RUN uv pip install librosa accelerate
