@@ -82,17 +82,17 @@ RUN pip install opentelemetry-distro && pip install opentelemetry-exporter-otlp
 
 RUN opentelemetry-bootstrap --action=install
 
-# Install custom nodes in batches to reduce registry fetches and layer count.
-# Each comfy-node-install call triggers a full ComfyRegistry fetch (~100s),
-# so batching saves significant build time.
+# Stable nodes -- rarely change, cached across builds
 RUN comfy-node-install \
     https://github.com/city96/ComfyUI-GGUF \
     https://github.com/rgthree/rgthree-comfy \
     https://github.com/ClownsharkBatwing/RES4LYF \
-    https://github.com/giriss/comfy-image-saver \
+    https://github.com/giriss/comfy-image-saver
+
+# Volatile nodes -- TTS/VLM pipeline, still evaluating
+RUN comfy-node-install \
     https://github.com/Enemyx-net/VibeVoice-ComfyUI \
     https://github.com/ru4ls/ComfyUI_Nano_Banana \
-    https://github.com/1038lab/ComfyUI-JoyCaption \
     https://github.com/DarioFT/ComfyUI-Qwen3-TTS \
     https://github.com/1038lab/ComfyUI-QwenVL
 
